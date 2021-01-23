@@ -7,10 +7,8 @@ public class MobilController : Controller
 
 
 	private Touch touch;
-	//private Vector2 fingerDownPosition;
-	//private Vector2 fingerUpPosition;
 
-	private float minDistanceForSwipe = 20f;
+
 
 
     // Update is called once per frame
@@ -30,16 +28,6 @@ public class MobilController : Controller
 
 	public override void GetInput()
 	{
-		//if (touch.phase == TouchPhase.Began)
-		//{
-		//	fingerDownPosition = touch.position;
-		//	fingerUpPosition = touch.position;
-		//}
-
-		//if (touch.phase == TouchPhase.Ended)
-		//{
-		//	fingerUpPosition = touch.position;
-		//}
 
 		if (touch.phase == TouchPhase.Began || touch.phase == TouchPhase.Moved || touch.phase == TouchPhase.Stationary)
 		{
@@ -49,16 +37,5 @@ public class MobilController : Controller
 			base.InputValue = 0;
 	}
 
-	//public bool SwipeDistanceCheckMet()
-	//{
-	//	return HorizontalMovementDistance() > minDistanceForSwipe;
-	//}
 
-
-
-	//public float HorizontalMovementDistance()
-	//{
-	//	return fingerDownPosition.x - fingerUpPosition.x;
-
-	//}
 }

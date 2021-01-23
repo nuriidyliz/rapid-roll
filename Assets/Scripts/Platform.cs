@@ -4,18 +4,20 @@ using UnityEngine;
 
 public class Platform : MonoBehaviour
 {
-	public float speed;
-
+	private float speed;
+	private bool haveHealth;
 
 	public GameObject prefab;
 	private Vector2 movement;
 	private Rigidbody rb;
+
     // Start is called before the first frame update
     void Start()
     {
 		rb = GetComponent<Rigidbody>();
 		movement = new Vector2(0, 1);
-    }
+		Time.fixedDeltaTime = 1f / 50f;		//default 50
+	}
 
     // Update is called once per frame
     void FixedUpdate()
@@ -25,7 +27,8 @@ public class Platform : MonoBehaviour
 
 	void MovePlatform()
 	{
-		rb.MovePosition((Vector2)transform.position + movement * speed * Time.fixedDeltaTime);
 
+		speed = GameObject.Find("PlatformManager").GetComponent<PlatformManager>().gameSpeed;
+		rb.MovePosition((Vector2)transform.position + movement * speed * Time.fixedDeltaTime);
 	}
 }
