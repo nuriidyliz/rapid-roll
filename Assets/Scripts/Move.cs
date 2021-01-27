@@ -9,7 +9,7 @@ public class Move : MonoBehaviour
 	private float gameSpeed;
 	private Rigidbody rb;
 	private Vector3 movement;
-
+	private bool wallHit = false;
 	Controller controller;
 
 
@@ -22,24 +22,40 @@ public class Move : MonoBehaviour
 		rb = GetComponent<Rigidbody>();
 		SetController();
 		speed = GameManager.instance.ballHorizontalSpeed;
+		//EventManager.instance.BallSpawnAction();
+		BallSpawnerScript.Instance.gameObject.SetActive(true);
 	}
 
-	// Update is called once per frame
-	//void Update()
- //   {
-	//	//movement = new Vector2(input, 0);
-	//	//Debug.Log(controller.InputValue);
-	//	//Debug.Log(movement);
-	//}
 
 	public void FixedUpdate()
 	{
 
 		if (this.gameObject.transform.position.y < -7)
 		{
-			EventManager.instance.EndGameAction();
+			gameObject.transform.position = new Vector3(-3.1f, 10f, 0);
+
+			if (GameManager.instance.health > 0)
+			{
+				StartCoroutine(RespawnBall(1));
+
+			}
+			else
+			{
+				Debug.Log("nası girdin");
+				EventManager.instance.EndGameAction();
+
+			}
 		}
-		TryMove();
+		//Debug.Log("x: " + rb.velocity.x + "y: " + rb.velocity.y + "gra : " + Physics.gravity);
+
+		if (true)
+		{
+			TryMove();
+		}
+		else
+			Debug.Log("asdfasdfas");
+
+
 		//Fall();
 
 	}
@@ -47,39 +63,37 @@ public class Move : MonoBehaviour
 
 	private void TryMove()
 	{
-		float fallSpeed;
 
-		fallSpeed = 0;
-
-
+		// Get movement direction vector
 		movement = new Vector3(controller.InputValue, 0, 0);
 
-		//rb.AddForce(new Vector3(controller.InputValue, 0, 0),ForceMode.Acceleration);
-
-
+		#region			Some movement method
+		//rb.AddForce(new Vector3(controller.InputValue, 0, 0), ForceMode.Acceleration);
 		//rb.velocity = movement * speed;
-
-		//gameSpeed = GameObject.Find("PlatformManager").GetComponent<PlatformManager>().gameSpeed;
-		Vector3 fall = new Vector3(0, -2 - gameSpeed, 0);
-
 		//rb.MovePosition(transform.position + (movement * Time.fixedDeltaTime * speed));
+		#endregion
+		#region Draw velocity lines
+		//debug.drawray(rb.position, (movement * speed), color.yellow);
+		//debug.drawray(rb.position, -new vector3(rb.velocity.x, 0, 0), color.red);
+		//debug.drawray(rb.position, -(movement * speed), color.blue);
+		#endregion
+		
+		// wallHit prevents sticks to side walls
 		rb.AddForce((movement * speed - new Vector3(rb.velocity.x, 0, 0)), ForceMode.VelocityChange);
-		//Debug.Log(rb.velocity);
+		if (wallHit)
+			rb.AddForce(-(movement * speed), ForceMode.VelocityChange);
+		if (controller.InputValue == 0)
+			wallHit = false;
 
-		//rb.velocity = movement*Time.fixedDeltaTime*speed;
+
+
+		// rotates the balls according to move direction
 		Vector3 m_EulerAngleVelocity = new Vector3(0, 0, -1000 * controller.InputValue);
 		Quaternion deltaRotation = Quaternion.Euler(m_EulerAngleVelocity * Time.fixedDeltaTime);
 		rb.MoveRotation(rb.rotation * deltaRotation);
 	}
 
-	private void Fall()
-	{
-		//rb.velocity += new Vector3(0, -2, 0);
-		Vector3 fall = new Vector3(0, -2, 0);
-		gameSpeed = GameObject.Find("PlatformManager").GetComponent<PlatformManager>().gameSpeed;
-		rb.MovePosition(transform.position + (fall * (10) * Time.deltaTime));
 
-	}
 	private void SetController()
 	{
 #if UNITY_EDITOR || UNITY_STANDALONE
@@ -100,8 +114,37 @@ public class Move : MonoBehaviour
 			EventManager.instance.HealthLostAction();
 
 		}
+		else if (collision.gameObject.tag == "Wall")
+		{
+			wallHit = true;
+		}
 
 	}
 
+	private void OnCollisionExit(Collision collision)
+	{
+		if (collision.gameObject.tag == "Trap")
+		{
 
+		}
+		else if (collision.gameObject.tag == "Wall")
+		{
+			wallHit = false;
+		}
+
+	}
+
+	IEnumerator RespawnBall(int second)
+	{
+		Debug.Log("1");
+		//transform.gameObject.SetActive(false);
+		yield return new WaitForSeconds(second);
+		//transform.gameObject.SetActive(true);
+		Debug.Log("2");
+
+		EventManager.instance.HealthLostAction();
+		//EventManager.instance.BallSpawnAction();
+		BallSpawnerScript.Instance.gameObject.SetActive(true);
+
+	}
 }

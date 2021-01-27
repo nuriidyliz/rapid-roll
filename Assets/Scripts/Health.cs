@@ -10,6 +10,6 @@ public class Health : MonoBehaviour
 		{
 			EventManager.instance.HealthPickedAction();
 		}
-		Destroy(transform.gameObject);
+		ObjectPooler.Instance.Deactivate(transform.gameObject);
 	}
 }

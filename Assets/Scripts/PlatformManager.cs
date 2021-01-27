@@ -4,42 +4,84 @@ using UnityEngine;
 
 public class PlatformManager : MonoBehaviour
 {
-	public GameObject platformPrefab;
-	public GameObject trapPrefab;
-	public GameObject healthPrefab;
-	public int numTotalPlatforms;
-	public float width, platformLength;
-
-	[SerializeField]
-	private float stepHeight;
-
-	public float gameSpeed;
-
+	ObjectPooler objectPooler;
+	GameManager gameManager;
 	private GameObject platformManager;
+
+
+	public float stepHeight;
+
+
+
 	public List<GameObject> platforms = new List<GameObject>();
-	private float semiRange;
+	public int numTotalPlatforms;
 
+	[Header("Trap and Health")]
+	public float trapProb;
+	public int trapLimit, trapNumber;
+	public float healthProb;
+	public int healthLimit, healthNumber;
+	public float healthDistanceFromPlatform;
+	
+	[Header("Paths")]
+	public int numberOfPath;
+	public List<float> pathPositions;
 
-
+	//private float semiRange;
+	[System.NonSerialized]
+	public float gameSpeed;
+	[System.NonSerialized]
 	public int score = 0;
     // Start is called before the first frame update
     void Start()
     {
+		objectPooler = ObjectPooler.Instance;
+		gameManager = GameManager.instance;
+
+		trapNumber = 0;
+		healthNumber = 0;
+
 		SetActions();
 
 
-		gameSpeed = GameManager.instance.gameSpeed;
-		semiRange = (width - platformLength) / 2;
+		gameSpeed = gameManager.gameSpeed;
+		//semiRange = (width - platformLength) / 2;
 		platformManager = this.gameObject;
+
+		SetPathPositions();
+
 		SetInitPlatforms();
-
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+	void SetPathPositions()
+	{
+		//RIGHT AND LEFT WALLS MUST BE EQUIVALENT AND MUST BE THE SAME DISTANCE FROM 0
+		float leftWallPosition, rightWallPosition, wallWidth;
+
+		GameObject sideWalls = GameObject.Find("SideWalls");
+		leftWallPosition = sideWalls.transform.Find("LeftWall").transform.position.x;
+		//rightWallPosition = sideWalls.transform.Find("RightWall").transform.position.x;
+		wallWidth = sideWalls.transform.Find("RightWall").transform.localScale.x;
+
+		float platformWidth;
+		GameObject platformPrefab = objectPooler.pools.Find(item => item.tag.Equals("Platform")).prefab;
+		platformWidth = platformPrefab.transform.localScale.x;
+
+		float leftmostPathPosition, tolaranceDistance;
+		tolaranceDistance = 0.03f;
+		leftmostPathPosition = leftWallPosition + (float)(wallWidth / 2) + (float)(platformWidth / 2) + tolaranceDistance;
+
+		float spawnRange, intervalDistance;
+		spawnRange = Mathf.Abs(leftmostPathPosition) * 2;
+		intervalDistance = (float)(spawnRange / (numberOfPath - 1));
+
+		for(int i = 0; i < numberOfPath; i++)
+		{
+			pathPositions.Add(leftmostPathPosition + (i * intervalDistance));
+		}
+
+
+	}
 
 	void SetInitPlatforms()
 	{
@@ -47,61 +89,100 @@ public class PlatformManager : MonoBehaviour
 
 		for(int i = 0; i < numTotalPlatforms; i++)
 		{
-			CreateSinglePlatform(tempY);
+			//CreateSinglePlatform(tempY);
+			SpawnPlatform(tempY);
 			tempY -= stepHeight;
 
 		}
 
 	}
 
-	public  void CreateNewPlatform()
+	void SpawnPlatform(float lastYValue)
 	{
+		var xValue = pathPositions[(int)(Random.value * numberOfPath)];
 
-		float tempY = (platforms[platforms.Count - 1].transform.position.y) - stepHeight;
-		CreateSinglePlatform(tempY);
-	}
+		Vector3 randPos = new Vector3(xValue, lastYValue, 0);
+		string platformType = IsTrap() ? "Trap" : "Platform";
 
-
-	private void CreateSinglePlatform(float yValue)
-	{
-		float trapProb = Random.value;
-
-		GameObject prefab = trapProb <= 0.2f ? trapPrefab : platformPrefab;
-
-		Vector2 position = new Vector2(Random.Range(-semiRange,semiRange), yValue);
-		GameObject newPlatform = Instantiate(prefab, position, Quaternion.identity);
+		GameObject newPlatform = objectPooler.SpawnFromPool(platformType, randPos, Quaternion.identity);
 		platforms.Add(newPlatform);
 		newPlatform.transform.SetParent(platformManager.transform);
 
-		CreateHealth(newPlatform);
-	}
-
-	private void CreateHealth(GameObject platform)
-	{
-		float healthProb = Random.value;
-
-		if (healthProb < 0.2f)
+		if (platformType.Equals("Platform"))
 		{
-			GameObject newHealth = Instantiate(healthPrefab, new Vector3(0,0,0), Quaternion.identity);
-			newHealth.transform.SetParent(platform.transform);
-			newHealth.transform.localPosition = new Vector3(0, 1.2f, 0);
+			if (HasHealth())
+			{
+				GameObject newHealth = objectPooler.SpawnFromPool("Health", new Vector3(0, 0, 0), Quaternion.identity);
+				newHealth.transform.SetParent(newPlatform.transform);
+				newHealth.transform.localPosition = new Vector3(0, healthDistanceFromPlatform, 0);
+				healthNumber++;
+			}
 		}
-		else
-			return;
 	}
+
+	bool IsTrap()
+	{
+		bool isTrap = false;
+
+		if (trapNumber < trapLimit)
+		{
+			float trapProb = Random.value;
+
+			if(trapProb <= this.trapProb)
+			{
+				isTrap = true;
+				trapNumber++;
+			}
+		}
+
+		return isTrap;
+	}
+
+	bool HasHealth()
+	{
+		bool hasHealth = false;
+
+		if(healthNumber < healthLimit)
+		{
+			float healthProb = Random.value;
+
+			if(healthProb <= this.healthProb)
+			{
+				hasHealth = true;
+				healthProb++;
+			}
+		}
+
+		return hasHealth;
+	}
+
 
 	void PlatformDestroy(GameObject platform)
 	{
-		gameSpeed = GameManager.instance.gameSpeed;
-		CreateNewPlatform();
-		this.platforms.Remove(platform);
-		Destroy(platform);
+		if (platform.tag.Equals("Trap"))
+		{
+			trapNumber--;
+		}
+		else if (platform.tag.Equals("Health"))
+		{
+			healthNumber--;
+			Debug.Log("asfdjıo");
+		}
 
+		SpawnPlatform((platforms[platforms.Count - 1].transform.position.y) - stepHeight);
+		this.platforms.Remove(platform);
+
+	}
+
+	void HealthPicked()
+	{
+		healthNumber--;
 	}
 
 	void SetActions()
 	{
 		EventManager.instance.PlatformDestroyed += PlatformDestroy;
+		EventManager.instance.HealthPicked += HealthPicked;
 	}
 
 }
