@@ -8,8 +8,20 @@ public class PlatformDestroyerScript : MonoBehaviour
 	{
 		if (other.tag.Equals("Player"))
 		{
-			EventManager.instance.EndGameAction();
-			return;
+			if(GameManager.instance.health > 0)
+			{
+				other.gameObject.transform.position = new Vector3(-3.1f, 10f, 0);
+				StartCoroutine(GameManager.instance.RespawnBall());
+			}
+			else
+			{
+				EventManager.instance.EndGameAction();
+				return;
+			}
+		}
+		else
+		{
+			ObjectPooler.Instance.Deactivate(other.gameObject);
 		}
 		DestroyPlatform(other.gameObject);
 	}

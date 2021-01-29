@@ -15,7 +15,7 @@ public class GameManager : MonoBehaviour
 	public int health;
 	public int maxHealth;
 	public int score;
-
+	public float respawnTime;
 	private PlatformManager platformManager;
 
 	private void Awake()
@@ -80,6 +80,20 @@ public class GameManager : MonoBehaviour
 	{
 
 		this.score += value;
+	}
+
+	public IEnumerator RespawnBall()
+	{
+		Debug.Log("1");
+		//transform.gameObject.SetActive(false);
+		yield return new WaitForSeconds(respawnTime);
+		//transform.gameObject.SetActive(true);
+		Debug.Log("2");
+
+		EventManager.instance.HealthLostAction();
+		//EventManager.instance.BallSpawnAction();
+		BallSpawnerScript.Instance.gameObject.SetActive(true);
+
 	}
 
 	private void SetActions()

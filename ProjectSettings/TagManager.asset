@@ -8,6 +8,7 @@ TagManager:
   - Trap
   - Wall
   - Health
+  - PlatformSide
   layers:
   - Default
   - TransparentFX

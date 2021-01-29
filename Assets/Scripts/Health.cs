@@ -9,7 +9,7 @@ public class Health : MonoBehaviour
 		if (other.gameObject.tag.Equals("Player"))
 		{
 			EventManager.instance.HealthPickedAction();
+			ObjectPooler.Instance.Deactivate(transform.gameObject);
 		}
-		ObjectPooler.Instance.Deactivate(transform.gameObject);
 	}
 }

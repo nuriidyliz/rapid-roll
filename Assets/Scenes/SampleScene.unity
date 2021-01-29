@@ -1324,6 +1324,7 @@ MonoBehaviour:
   health: 0
   maxHealth: 3
   score: 0
+  respawnTime: 0.5
 --- !u!4 &1105395183
 Transform:
   m_ObjectHideFlags: 0
@@ -1371,7 +1372,7 @@ MonoBehaviour:
   - tag: Platform
     prefab: {fileID: 3470462393340414531, guid: f2031b08607f0734182c79e62ab3d67a,
       type: 3}
-    size: 20
+    size: 30
   - tag: Trap
     prefab: {fileID: 5119789958732641821, guid: d1786977f6bc01c46b924ac874926d55,
       type: 3}

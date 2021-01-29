@@ -166,11 +166,15 @@ public class PlatformManager : MonoBehaviour
 		else if (platform.tag.Equals("Health"))
 		{
 			healthNumber--;
-			Debug.Log("asfdjıo");
 		}
 
-		SpawnPlatform((platforms[platforms.Count - 1].transform.position.y) - stepHeight);
-		this.platforms.Remove(platform);
+		if(platform.tag.Equals("Platform") || platform.tag.Equals("Trap"))
+		{
+			SpawnPlatform((platforms[platforms.Count - 1].transform.position.y) - stepHeight);
+			this.platforms.Remove(platform);
+		}
+
+
 
 	}
 

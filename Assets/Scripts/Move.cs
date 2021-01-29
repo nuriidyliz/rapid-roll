@@ -12,6 +12,8 @@ public class Move : MonoBehaviour
 	private bool wallHit = false;
 	Controller controller;
 
+	private float prevInput;
+
 
 	bool canFall;
 
@@ -30,22 +32,22 @@ public class Move : MonoBehaviour
 	public void FixedUpdate()
 	{
 
-		if (this.gameObject.transform.position.y < -7)
-		{
-			gameObject.transform.position = new Vector3(-3.1f, 10f, 0);
+		//if (this.gameObject.transform.position.y < -7)
+		//{
+		//	gameObject.transform.position = new Vector3(-3.1f, 10f, 0);
 
-			if (GameManager.instance.health > 0)
-			{
-				StartCoroutine(RespawnBall(1));
+		//	if (GameManager.instance.health > 0)
+		//	{
+		//		StartCoroutine(GameManager.instance.RespawnBall());
 
-			}
-			else
-			{
-				Debug.Log("nası girdin");
-				EventManager.instance.EndGameAction();
+		//	}
+		//	else
+		//	{
+		//		Debug.Log("nası girdin");
+		//		EventManager.instance.EndGameAction();
 
-			}
-		}
+		//	}
+		//}
 		//Debug.Log("x: " + rb.velocity.x + "y: " + rb.velocity.y + "gra : " + Physics.gravity);
 
 		if (true)
@@ -73,17 +75,25 @@ public class Move : MonoBehaviour
 		//rb.MovePosition(transform.position + (movement * Time.fixedDeltaTime * speed));
 		#endregion
 		#region Draw velocity lines
-		//debug.drawray(rb.position, (movement * speed), color.yellow);
-		//debug.drawray(rb.position, -new vector3(rb.velocity.x, 0, 0), color.red);
-		//debug.drawray(rb.position, -(movement * speed), color.blue);
+		Debug.DrawRay(rb.position, (movement * speed), Color.yellow);
+		//Debug.DrawRay(rb.position, -new Vector3(rb.velocity.x, 0, 0), Color.red);
+		//Debug.DrawRay(rb.position, -(movement * speed), Color.blue);
 		#endregion
-		
+
 		// wallHit prevents sticks to side walls
 		rb.AddForce((movement * speed - new Vector3(rb.velocity.x, 0, 0)), ForceMode.VelocityChange);
 		if (wallHit)
+		{
 			rb.AddForce(-(movement * speed), ForceMode.VelocityChange);
-		if (controller.InputValue == 0)
+			Debug.DrawRay(rb.position, -(movement * speed), Color.blue);
+		}
+
+
+		if (controller.InputValue != prevInput)
+		{
 			wallHit = false;
+			prevInput = controller.InputValue;
+		}
 
 
 
@@ -134,17 +144,21 @@ public class Move : MonoBehaviour
 
 	}
 
-	IEnumerator RespawnBall(int second)
+	private void OnTriggerEnter(Collider other)
 	{
-		Debug.Log("1");
-		//transform.gameObject.SetActive(false);
-		yield return new WaitForSeconds(second);
-		//transform.gameObject.SetActive(true);
-		Debug.Log("2");
+		if(other.gameObject.tag == "PlatformSide")
+		{
+			Debug.Log("side");
+			wallHit = true;
+		}
+	}
 
-		EventManager.instance.HealthLostAction();
-		//EventManager.instance.BallSpawnAction();
-		BallSpawnerScript.Instance.gameObject.SetActive(true);
-
+	private void OnTriggerExit(Collider other)
+	{
+		if (other.gameObject.tag == "PlatformSide")
+		{
+			wallHit = false;
+			Debug.Log("cıktı");
+		}
 	}
 }
